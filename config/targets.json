@@ -1,0 +1,4 @@
+[
+  {"ip": "8.8.8.8", "port": 80, "name": "Google DNS"},
+  {"ip": "1.1.1.1", "port": 443, "name": "Cloudflare"}
+]
