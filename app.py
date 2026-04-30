@@ -3,6 +3,7 @@ import pandas as pd
 import json
 import os
 import sys
+import time
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
@@ -29,6 +30,9 @@ if 'scan_results' not in st.session_state:
     st.session_state.scan_results = []
 if 'is_monitoring' not in st.session_state:
     st.session_state.is_monitoring = True
+
+# Her döngüde dialog durumunu sıfırla. Dialog açıkken içindeki kod bu değeri True yapacak.
+st.session_state.dialog_active = False
 
 # Custom CSS (React/Figma Inspired)
 st.markdown(f"""
@@ -234,6 +238,7 @@ st.markdown(f"""
 
 @st.dialog("Hedef Ekle")
 def add_target_dialog():
+    st.session_state.dialog_active = True
     with st.form("add_target_form_dialog"):
         st.write("İzlemek istediğiniz yeni cihaz bilgilerini girin.")
         new_name = st.text_input("Hedef Adı", placeholder="örn: Web Server")
@@ -255,12 +260,14 @@ def add_target_dialog():
                 })
                 save_targets(targets)
                 st.success(f"{new_name} eklendi!")
+                time.sleep(1)
                 st.rerun()
             else:
                 st.error("Lütfen tüm alanları doldurun.")
 
 @st.dialog("Sistem Ayarları")
 def settings_dialog():
+    st.session_state.dialog_active = True
     st.write("İzleme sistemi parametrelerini yapılandırın.")
     
     new_interval = st.select_slider(
@@ -281,10 +288,12 @@ def settings_dialog():
         st.session_state.settings_max_logs = new_max_logs
         logger.maksimum_kayit_ayarla(new_max_logs)
         st.success("Ayarlar uygulandı!")
+        time.sleep(1)
         st.rerun()
 
 @st.dialog("Hedefi Kaldır")
 def confirm_remove_dialog(ip, port, name):
+    st.session_state.dialog_active = True
     st.warning(f"**{name}** ({ip}:{port}) hedefini izleme listesinden kaldırmak istediğinize emin misiniz?")
     st.write("Bu işlem geri alınamaz.")
     col1, col2 = st.columns(2)
@@ -292,6 +301,7 @@ def confirm_remove_dialog(ip, port, name):
         if st.button("Evet, Kaldır", type="primary", use_container_width=True):
             remove_target(ip, port)
             st.success(f"{name} kaldırıldı.")
+            time.sleep(1)
             st.rerun()
     with col2:
         if st.button("İptal", use_container_width=True):
@@ -299,6 +309,7 @@ def confirm_remove_dialog(ip, port, name):
 
 @st.dialog("Logları Temizle")
 def confirm_clear_logs_dialog():
+    st.session_state.dialog_active = True
     st.warning("Tüm sistem loglarını silmek istediğinize emin misiniz?")
     st.write("Bu işlem tüm geçmiş kayıtları kalıcı olarak silecektir.")
     col1, col2 = st.columns(2)
@@ -306,6 +317,7 @@ def confirm_clear_logs_dialog():
         if st.button("Evet, Temizle", type="primary", use_container_width=True):
             clear_logs()
             st.success("Loglar temizlendi.")
+            time.sleep(1)
             st.rerun()
     with col2:
         if st.button("İptal", use_container_width=True):
@@ -337,10 +349,6 @@ def remove_target(ip, port):
 def clear_logs():
     with open(logger.LOG_DOSYASI, 'w', encoding='utf-8') as f:
         json.dump([], f)
-
-# --- OTO YENİLEME ---
-if st.session_state.is_monitoring:
-    st_autorefresh(interval=st.session_state.settings_interval * 1000, key="data_refresh")
 
 # Veri Güncelleme (Sadece JSON'dan Oku)
 def get_latest_status():
@@ -654,3 +662,7 @@ if not log_df.empty:
     st.dataframe(display_df, use_container_width=True, hide_index=True)
 else:
     st.info("Henüz log kaydı bulunmuyor.")
+
+# --- OTO YENİLEME (En Sonda Çağrılır) ---
+if st.session_state.is_monitoring and not st.session_state.dialog_active:
+    st_autorefresh(interval=st.session_state.settings_interval * 1000, key="data_refresh")
