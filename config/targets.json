@@ -1,4 +1,86 @@
 [
-  {"ip": "8.8.8.8", "port": 80, "name": "Google DNS"},
-  {"ip": "1.1.1.1", "port": 443, "name": "Cloudflare"}
+  {
+    "name": "Google DNS (Global)",
+    "ip": "8.8.8.8",
+    "port": 53,
+    "control_type": "ICMP + TCP (İkisi de)",
+    "protokol": "UDP"
+  },
+  {
+    "name": "Cloudflare Gateway",
+    "ip": "1.1.1.1",
+    "port": 443,
+    "control_type": "ICMP + TCP (İkisi de)",
+    "protokol": "TCP"
+  },
+  {
+    "name": "GitHub Web",
+    "ip": "140.82.121.4",
+    "port": 443,
+    "control_type": "Sadece TCP Port",
+    "protokol": "TCP"
+  },
+  {
+    "name": "Marmara Üniversitesi",
+    "ip": "193.140.160.11",
+    "port": 80,
+    "control_type": "ICMP + TCP (İkisi de)",
+    "protokol": "TCP"
+  },
+  {
+    "name": "E-Devlet Kapısı",
+    "ip": "193.140.1.1",
+    "port": 443,
+    "control_type": "ICMP + TCP (İkisi de)",
+    "protokol": "TCP"
+  },
+  {
+    "name": "Google Mail (SMTP)",
+    "ip": "74.125.142.108",
+    "port": 587,
+    "control_type": "Sadece TCP Port",
+    "protokol": "TCP"
+  },
+  {
+    "name": "Quad9 DNS",
+    "ip": "9.9.9.9",
+    "port": 53,
+    "control_type": "ICMP + TCP (İkisi de)",
+    "protokol": "UDP"
+  },
+  {
+    "name": "Yerel Modem/Router",
+    "ip": "192.168.1.1",
+    "port": 80,
+    "control_type": "Sadece ICMP Ping",
+    "protokol": "TCP"
+  },
+  {
+    "name": "Kendi Bilgisayarım",
+    "ip": "127.0.0.1",
+    "port": 8501,
+    "control_type": "Sadece TCP Port",
+    "protokol": "TCP"
+  },
+  {
+    "name": "Hayali Kapalı Sunucu",
+    "ip": "10.255.255.1",
+    "port": 8080,
+    "control_type": "ICMP + TCP (İkisi de)",
+    "protokol": "TCP"
+  },
+  {
+    "name": "Level3 DNS",
+    "ip": "4.2.2.2",
+    "port": 53,
+    "control_type": "Sadece ICMP Ping",
+    "protokol": "UDP"
+  },
+  {
+    "name": "Microsoft Web",
+    "ip": "20.112.52.29",
+    "port": 80,
+    "control_type": "Sadece TCP Port",
+    "protokol": "TCP"
+  }
 ]
