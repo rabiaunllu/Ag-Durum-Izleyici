@@ -21,7 +21,7 @@ st.set_page_config(page_title="Ağ İzleme Sistemi", layout="wide", initial_side
 if 'settings_interval' not in st.session_state:
     st.session_state.settings_interval = 5
 if 'settings_max_logs' not in st.session_state:
-    st.session_state.settings_max_logs = 100
+    st.session_state.settings_max_logs = 5000
 if 'search_query' not in st.session_state:
     st.session_state.search_query = ""
 if 'filter_status' not in st.session_state:
@@ -279,7 +279,7 @@ def settings_dialog():
     new_max_logs = st.number_input(
         "Maksimum Log Sayısı",
         min_value=10,
-        max_value=1000,
+        max_value=50000,
         value=st.session_state.settings_max_logs
     )
     
@@ -358,7 +358,7 @@ def get_latest_status():
     latest_logs = {}
 
     for entry in log_data:
-        key = (entry.get('hedef_ip'), entry.get('port'))
+        key = (entry.get('hedef_ip'), entry.get('hedef_adi'))
         if key not in latest_logs:
             latest_logs[key] = entry
 
@@ -368,7 +368,7 @@ def get_latest_status():
         port = t.get("port")
         name = t.get("name")
         
-        log = latest_logs.get((ip, port))
+        log = latest_logs.get((ip, name))
         if log:
             durum = log.get("durum", "KAPALI")
             results.append({
@@ -531,7 +531,7 @@ else:
             if st.session_state[preview_key]:
                 st.markdown("---")
                 # Bu cihazın son verilerini çek
-                t_logs = [l for l in all_logs if l.get('hedef_ip') == r['ip'] and l.get('port') == r['port']][:20]
+                t_logs = [l for l in all_logs if l.get('hedef_ip') == r['ip'] and l.get('hedef_adi') == r['name']][:20]
                 t_logs.reverse()
                 if t_logs:
                     df_t = pd.DataFrame(t_logs)
@@ -558,7 +558,7 @@ with perf_select_col:
 # Geçmiş verileri çek
 all_logs = logger.son_kayitlari_getir(1000)
 # Seçili hedefe göre filtrele
-target_logs = [l for l in all_logs if l.get('hedef_ip') == selected_target['ip'] and l.get('port') == selected_target['port']]
+target_logs = [l for l in all_logs if l.get('hedef_ip') == selected_target['ip'] and l.get('hedef_adi') == selected_target['name']]
 target_logs.reverse() # Grafik için eskiden yeniye
 
 if not target_logs:
@@ -643,7 +643,7 @@ with l_col2:
     
     csv_col, clear_col = st.columns(2)
     with csv_col:
-        csv = log_df.to_csv(index=False).encode('utf-8') if not log_df.empty else b""
+        csv = log_df.to_csv(index=False, sep=';').encode('utf-8-sig') if not log_df.empty else b""
         st.download_button("📥 CSV", data=csv, file_name="monitor_logs.csv", mime="text/csv", use_container_width=True)
     with clear_col:
         if st.button("🗑️ Temizle", use_container_width=True, key="clear_logs_btn"):

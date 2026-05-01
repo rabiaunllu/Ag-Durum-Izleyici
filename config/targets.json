@@ -21,13 +21,6 @@
     "protokol": "TCP"
   },
   {
-    "name": "Marmara Üniversitesi",
-    "ip": "193.140.160.11",
-    "port": 80,
-    "control_type": "ICMP + TCP (İkisi de)",
-    "protokol": "TCP"
-  },
-  {
     "name": "E-Devlet Kapısı",
     "ip": "193.140.1.1",
     "port": 443,
@@ -82,5 +75,24 @@
     "port": 80,
     "control_type": "Sadece TCP Port",
     "protokol": "TCP"
+  },
+  {
+    "name": "Yerel Test Sunucusu",
+    "ip": "127.0.0.1",
+    "port": 8000,
+    "protokol": "TCP",
+    "control_type": "Sadece TCP Port"
+  },
+  {
+    "ip": "193.140.143.195",
+    "port": 443,
+    "name": "Marmara Üniversitesi",
+    "control_type": "Sadece TCP Port"
+  },
+  {
+    "ip": "192.178.24.78",
+    "port": 443,
+    "name": "Classroom",
+    "control_type": "ICMP + TCP (İkisi de)"
   }
 ]

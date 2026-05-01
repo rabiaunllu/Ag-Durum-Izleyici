@@ -82,21 +82,22 @@ def cihaz_kontrol_et(isim, veri):
     # --------------------------------------------------
 
     # 3. ADIM: DURUM DEĞİŞİKLİĞİ VE LOGLAMA
+    # Arayüzün (Streamlit) taze veri alabilmesi için her kontrolde log paketini hazırlayıp kaydediyoruz
+    log_paketi = {
+        "hedef_ip": ip,
+        "port": port,
+        "protokol": proto,
+        "hedef_adi": isim,
+        "durum": su_anki_durum,
+        "gecikme_ms": aktif_gecikme,
+        "paket_kaybi": kayip
+    }
+    logger.kayit_ekle(log_paketi) # Bu artık hem JSON hem SQLite'a yazar
+
     if su_anki_durum != son_durumlar[isim]:
         zaman = datetime.now().strftime("%H:%M:%S")
         mesaj = f"[{zaman}] {isim} ({proto}) Durumu: {son_durumlar[isim]} -> {su_anki_durum}"
         ping_checker.renkli_durum_yazdir(mesaj, su_anki_durum)
-
-        log_paketi = {
-            "hedef_ip": ip,
-            "port": port,
-            "protokol": proto,
-            "hedef_adi": isim,
-            "durum": su_anki_durum,
-            "gecikme_ms": aktif_gecikme,
-            "paket_kaybi": kayip
-        }
-        logger.kayit_ekle(log_paketi) # Bu artık hem JSON hem SQLite'a yazar
         son_durumlar[isim] = su_anki_durum
     else:
         # Durum değişmediyse sadece terminalde işlem aktığını takip ediyorum

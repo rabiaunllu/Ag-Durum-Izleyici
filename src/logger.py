@@ -1,11 +1,13 @@
 import json
 import os
 from datetime import datetime
+import threading
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # logs klasörünü ve json dosyasını proje dizininde tutuyoruz
 LOG_DOSYASI = os.path.abspath(os.path.join(BASE_DIR, "..", "logs", "monitor_log.json"))
-MAKSIMUM_KAYIT = 500
+MAKSIMUM_KAYIT = 10000
+lock = threading.Lock()
 
 
 def kayit_ekle(veri):
@@ -29,16 +31,17 @@ def kayit_ekle(veri):
     }
 
     # JSON dosyasına yazma işlemleri
-    mevcut_veriler = _dosyayi_oku()
+    with lock:
+        mevcut_veriler = _dosyayi_oku()
 
-    # En yeni kaydı en başa ekliyoruz (Arayüzde en üstte görünsün diye)
-    mevcut_veriler.insert(0, yeni_kayit)
+        # En yeni kaydı en başa ekliyoruz (Arayüzde en üstte görünsün diye)
+        mevcut_veriler.insert(0, yeni_kayit)
 
-    # Dosya şişmesin diye sınırı koruyoruz
-    if len(mevcut_veriler) > MAKSIMUM_KAYIT:
-        mevcut_veriler = mevcut_veriler[:MAKSIMUM_KAYIT]
+        # Dosya şişmesin diye sınırı koruyoruz
+        if len(mevcut_veriler) > MAKSIMUM_KAYIT:
+            mevcut_veriler = mevcut_veriler[:MAKSIMUM_KAYIT]
 
-    _dosyaya_yaz(mevcut_veriler)
+        _dosyaya_yaz(mevcut_veriler)
 
 
 def _dosyayi_oku():
@@ -63,7 +66,8 @@ def _dosyaya_yaz(veri):
 
 def son_kayitlari_getir(getirilecek_sayi=50):
     """JSON dosyasındaki son kayıtları döndürür."""
-    mevcut_veriler = _dosyayi_oku()
+    with lock:
+        mevcut_veriler = _dosyayi_oku()
     return mevcut_veriler[:getirilecek_sayi]
 
 
