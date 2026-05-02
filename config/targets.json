@@ -72,7 +72,7 @@
   {
     "name": "Microsoft Web",
     "ip": "20.112.52.29",
-    "port": 80,
+    "port": 443,
     "control_type": "Sadece TCP Port",
     "protokol": "TCP"
   },
@@ -93,6 +93,6 @@
     "ip": "192.178.24.78",
     "port": 443,
     "name": "Classroom",
-    "control_type": "ICMP + TCP (İkisi de)"
+    "control_type": "Sadece TCP Port"
   }
 ]

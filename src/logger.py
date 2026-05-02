@@ -14,7 +14,7 @@ def kayit_ekle(veri):
     tarih_saat = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
     # Arayüzdeki log akışı için dinamik mesaj oluşturma
-    if veri["durum"] in ["ACIK", "AÇIK"]:
+    if veri["durum"] == "AÇIK":
         mesaj = f"{veri['hedef_ip']} sunucusu erişilebilir."
     else:
         mesaj = f"{veri['hedef_ip']} sunucusuna ulaşılamıyor! (Bağlantı koptu)"
@@ -38,8 +38,25 @@ def kayit_ekle(veri):
         mevcut_veriler.insert(0, yeni_kayit)
 
         # Dosya şişmesin diye sınırı koruyoruz
-        if len(mevcut_veriler) > MAKSIMUM_KAYIT:
-            mevcut_veriler = mevcut_veriler[:MAKSIMUM_KAYIT]
+        if len(mevcut_veriler) >= MAKSIMUM_KAYIT:
+            # En yeni %10'u ana dosyada bırak, geri kalan %90'ı arşivle
+            yeni_sinir = max(1, int(MAKSIMUM_KAYIT * 0.1))
+            eski_veriler = mevcut_veriler[yeni_sinir:]
+            mevcut_veriler = mevcut_veriler[:yeni_sinir]
+            
+            # Arşivleme işlemi
+            try:
+                arsiv_klasoru = os.path.join(os.path.dirname(LOG_DOSYASI), "archives")
+                os.makedirs(arsiv_klasoru, exist_ok=True)
+                
+                zaman_damgasi = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+                arsiv_dosya_adi = f"archive_bulk_{zaman_damgasi}.json"
+                arsiv_yolu = os.path.join(arsiv_klasoru, arsiv_dosya_adi)
+                
+                with open(arsiv_yolu, "w", encoding="utf-8") as f:
+                    json.dump(eski_veriler, f, indent=2, ensure_ascii=False)
+            except Exception as e:
+                print(f" [HATA] Log arşivleme hatası: {e}")
 
         _dosyaya_yaz(mevcut_veriler)
 

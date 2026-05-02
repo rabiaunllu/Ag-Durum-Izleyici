@@ -30,6 +30,8 @@ if 'scan_results' not in st.session_state:
     st.session_state.scan_results = []
 if 'is_monitoring' not in st.session_state:
     st.session_state.is_monitoring = True
+if 'previous_status' not in st.session_state:
+    st.session_state.previous_status = {}
 
 # Her döngüde dialog durumunu sıfırla. Dialog açıkken içindeki kod bu değeri True yapacak.
 st.session_state.dialog_active = False
@@ -236,6 +238,23 @@ st.markdown(f"""
 
 # --- MODALS (st.dialog) ---
 
+@st.dialog("📚 Ağ ve Hata Kodları Sözlüğü")
+def dictionary_dialog():
+    st.session_state.dialog_active = True
+    st.markdown("""
+| Kod | Durum | Açıklama |
+| :--- | :--- | :--- |
+| **0** | Bağlantı Başarılı | Port açık, servis çalışıyor. |
+| **10061** | Port Reddedildi | Sunucu açık ama o portta servis yok. |
+| **10060** | Zaman Aşımı | Pakete cevap gelmedi, paket yolda kayboldu. |
+| **10035** | Güvenlik Duvarı | Firewall paketi sessizce düşürdü (Stealth Drop). |
+| **10065** | Hedefe Ulaşılamıyor | Ağ rotası yok, cihaz tamamen erişilemez. |
+| **10064** | Host Çöktü | Cihaz bağlantı sırasında kapandı. |
+""")
+    if st.button("Kapat", use_container_width=True):
+        st.rerun()
+
+
 @st.dialog("Hedef Ekle")
 def add_target_dialog():
     st.session_state.dialog_active = True
@@ -343,7 +362,6 @@ def remove_target(ip, port):
     targets = load_targets()
     new_targets = [t for t in targets if not (t['ip'] == ip and t['port'] == port)]
     save_targets(new_targets)
-    st.rerun()
 
 
 def clear_logs():
@@ -367,7 +385,17 @@ def get_latest_status():
         ip = t.get("ip")
         port = t.get("port")
         name = t.get("name")
+        control_type = t.get("control_type", "ICMP + TCP")
         
+        device_logs = [log for log in log_data if log.get('hedef_ip') == ip and log.get('hedef_adi') == name]
+        total_logs = len(device_logs)
+        if total_logs > 0:
+            open_logs = sum(1 for log in device_logs if log.get('durum') == "AÇIK")
+            uptime_pct = (open_logs / total_logs) * 100
+            uptime_str = f"%{uptime_pct:.1f}"
+        else:
+            uptime_str = "%0.0"
+
         log = latest_logs.get((ip, name))
         if log:
             durum = log.get("durum", "KAPALI")
@@ -375,19 +403,21 @@ def get_latest_status():
                 "name": name,
                 "ip": ip,
                 "port": port,
-                "icmp": "Başarılı" if durum in ["AÇIK", "ACIK"] else "Başarısız",
-                "tcp": "Açık" if durum in ["AÇIK", "ACIK"] else "Kapalı",
+                "control_type": control_type,
+                "uptime": uptime_str,
+                "servis_durumu": "Başarılı" if durum == "AÇIK" else "Başarısız",
                 "latency": f"{log.get('gecikme_ms')}ms" if log.get('gecikme_ms') is not None else "N/A",
                 "last_check": log.get("tarih_saat").split(" ")[1] if log.get("tarih_saat") else "N/A",
-                "status": "AÇIK" if durum in ["AÇIK", "ACIK"] else "KAPALI"
+                "status": "AÇIK" if durum == "AÇIK" else "KAPALI"
             })
         else:
             results.append({
                 "name": name,
                 "ip": ip,
                 "port": port,
-                "icmp": "Bilinmiyor",
-                "tcp": "Bilinmiyor",
+                "control_type": control_type,
+                "uptime": uptime_str,
+                "servis_durumu": "Bilinmiyor",
                 "latency": "N/A",
                 "last_check": "N/A",
                 "status": "BILINMIYOR"
@@ -397,25 +427,38 @@ def get_latest_status():
 st.session_state.scan_results = get_latest_status()
 results = st.session_state.scan_results
 
+# --- ALERTS / ERKEN UYARI ---
+current_status = {}
+for r in results:
+    key = f"{r['ip']}:{r['port']}"
+    current_status[key] = r['status']
+    if key in st.session_state.previous_status:
+        if st.session_state.previous_status[key] == "AÇIK" and r['status'] == "KAPALI":
+            st.toast(f"⚠️ {r['name']} ({r['ip']}) bağlantısı koptu!", icon="🚨")
+st.session_state.previous_status = current_status
+
 # --- HEADER & ACTIONS ---
 header_col1, header_col2 = st.columns([6, 4])
 with header_col1:
     st.markdown('''
         <div class="main-header">
-            <h1 class="header-title">📈 Ağ İzleme Sistemi</h1>
+            <h1 class="header-title"> Ağ İzleme Sistemi</h1>
             <p class="header-subtitle">Gerçek Zamanlı Ağ ve Servis Durumu</p>
         </div>
     ''', unsafe_allow_html=True)
 
 with header_col2:
-    act_col1, act_col2, act_col3 = st.columns(3)
+    act_col1, act_col2, act_col3, act_col4 = st.columns(4)
     with act_col1:
+        if st.button("ℹ️ Hata Kodları", use_container_width=True):
+            dictionary_dialog()
+    with act_col2:
         if st.button("⚙️ Ayarlar", use_container_width=True):
             settings_dialog()
-    with act_col2:
+    with act_col3:
         if st.button("➕ Hedef Ekle", use_container_width=True):
             add_target_dialog()
-    with act_col3:
+    with act_col4:
         monitor_color = "#10b981" if st.session_state.is_monitoring else "#ef4444"
         monitor_text = "📡 İzleme Aktif" if st.session_state.is_monitoring else "🚫 İzleme Durdu"
         if st.button(monitor_text, use_container_width=True):
@@ -447,12 +490,12 @@ if st.session_state.search_query:
 if st.session_state.filter_status == "Çevrimdışı":
     filtered_results = [r for r in filtered_results if r['status'] == "KAPALI"]
 elif st.session_state.filter_status == "Açık Portlar":
-    filtered_results = [r for r in filtered_results if r['tcp'] == "Açık"]
+    filtered_results = [r for r in filtered_results if r['status'] == 'AÇIK' and 'TCP' in r['control_type']]
 
 # --- STATS OVERVIEW ---
 online_count = sum(1 for r in results if r['status'] == 'AÇIK')
 offline_count = len(results) - online_count
-open_ports_count = sum(1 for r in results if r['tcp'] == 'Açık')
+open_ports_count = sum(1 for r in results if r['status'] == 'AÇIK' and 'TCP' in r['control_type'])
 
 m1, m2, m3, m4 = st.columns(4)
 with m1:
@@ -474,8 +517,7 @@ else:
     for i, r in enumerate(filtered_results):
         c = cols[i % 3]
         card_color = "#ef4444" if r['status'] == "KAPALI" else "#10b981"
-        icmp_badge = "badge-up" if r['icmp'] == "Başarılı" else "badge-down"
-        tcp_badge = "badge-up" if r['tcp'] == "Açık" else "badge-down"
+        servis_badge = "badge-up" if r['status'] == "AÇIK" else "badge-down"
         
         with c:
             # Kart Başlığı ve Silme Butonu
@@ -491,20 +533,16 @@ else:
             st.markdown(f'''
             <div class="target-card" style="--status-color: {card_color}; margin-top: 10px;">
                 <div class="status-row">
-                    <span>ICMP Ping</span>
-                    <span class="status-badge {icmp_badge}">{r['icmp']}</span>
+                    <span>Kontrol Tipi</span>
+                    <span>{r['control_type']}</span>
                 </div>
                 <div class="status-row">
-                    <span>Port {r['port']} (TCP)</span>
-                    <span class="status-badge {tcp_badge}">{r['tcp']}</span>
+                    <span>Uptime (Erişilebilirlik)</span>
+                    <span class="status-info">{r['uptime']}</span>
                 </div>
-                <div class="status-row">
-                    <span>Yanıt Süresi</span>
-                    <span class="status-info">{r['latency']}</span>
-                </div>
-                <div class="status-row" style="margin-top: 10px; color: #64748b; font-size: 0.8rem;">
-                    <span>Son Kontrol</span>
-                    <span>{r['last_check']}</span>
+                <div class="status-row" style="margin-top: 10px;">
+                    <span>Sonuç</span>
+                    <span class="status-badge {servis_badge}">{r['servis_durumu']}</span>
                 </div>
             </div>
             ''', unsafe_allow_html=True)
@@ -549,88 +587,92 @@ perf_title_col, perf_select_col = st.columns([7, 3])
 with perf_title_col:
     st.markdown('### 📉 Performans Geçmişi')
 
-with perf_select_col:
-    target_names = [f"{r['name']} ({r['ip']}:{r['port']})" for r in results]
-    selected_target_str = st.selectbox("Analiz Edilecek Hedef", options=target_names, label_visibility="collapsed", key="perf_target_select")
-    selected_idx = target_names.index(selected_target_str)
-    selected_target = results[selected_idx]
-
-# Geçmiş verileri çek
-all_logs = logger.son_kayitlari_getir(1000)
-# Seçili hedefe göre filtrele
-target_logs = [l for l in all_logs if l.get('hedef_ip') == selected_target['ip'] and l.get('hedef_adi') == selected_target['name']]
-target_logs.reverse() # Grafik için eskiden yeniye
-
-if not target_logs:
-    st.info("Bu hedef için yeterli veri bulunmuyor.")
+if not results:
+    st.info("İzlenen hedef bulunmuyor.")
+    st.markdown('</div>', unsafe_allow_html=True)
 else:
-    # Veriyi hazırla
-    df_perf = pd.DataFrame(target_logs)
-    df_perf['tarih_saat'] = pd.to_datetime(df_perf['tarih_saat'], format="%d-%m-%Y %H:%M:%S")
-    
-    avg_latency = df_perf['gecikme_ms'].mean()
-    avg_loss = df_perf['paket_kaybi'].mean()
+    with perf_select_col:
+        target_names = [f"{r['name']} ({r['ip']}:{r['port']})" for r in results]
+        selected_target_str = st.selectbox("Analiz Edilecek Hedef", options=target_names, label_visibility="collapsed", key="perf_target_select")
+        selected_idx = target_names.index(selected_target_str)
+        selected_target = results[selected_idx]
 
-    p_col1, p_col2 = st.columns(2)
-    
-    with p_col1:
-        st.markdown(f'''
-        <div class="chart-header">
-            <span class="chart-title">Ping Süresi (Latency)</span>
-            <span class="chart-avg">Ort: {avg_latency:.1f}ms</span>
-        </div>
-        ''', unsafe_allow_html=True)
-        # Latency Chart
-        chart_data_lat = df_perf.set_index('tarih_saat')[['gecikme_ms']]
-        st.line_chart(chart_data_lat, color="#3b82f6")
-        st.markdown('<p style="color: #64748b; font-size: 0.8rem; margin-top: -10px;">Düşük gecikme daha iyidir</p>', unsafe_allow_html=True)
+    # Geçmiş verileri çek
+    all_logs = logger.son_kayitlari_getir(1000)
+    # Seçili hedefe göre filtrele
+    target_logs = [l for l in all_logs if l.get('hedef_ip') == selected_target['ip'] and l.get('hedef_adi') == selected_target['name']]
+    target_logs.reverse() # Grafik için eskiden yeniye
 
-    with p_col2:
-        st.markdown(f'''
-        <div class="chart-header">
-            <span class="chart-title">Paket Kaybı (Packet Loss)</span>
-            <span class="chart-avg" style="color: #ef4444;">Ort: {avg_loss:.1f}%</span>
-        </div>
-        ''', unsafe_allow_html=True)
-        # Loss Chart
-        chart_data_loss = df_perf.set_index('tarih_saat')[['paket_kaybi']]
-        st.area_chart(chart_data_loss, color="#ef4444")
-        st.markdown('<p style="color: #64748b; font-size: 0.8rem; margin-top: -10px;">%0 kaybı ideal durumdur</p>', unsafe_allow_html=True)
+    if not target_logs:
+        st.info("Bu hedef için yeterli veri bulunmuyor.")
+    else:
+        # Veriyi hazırla
+        df_perf = pd.DataFrame(target_logs)
+        df_perf['tarih_saat'] = pd.to_datetime(df_perf['tarih_saat'], format="%d-%m-%Y %H:%M:%S")
+        
+        avg_latency = df_perf['gecikme_ms'].mean()
+        avg_loss = df_perf['paket_kaybi'].mean()
 
-    # Mini Metrics below charts
-    m_col1, m_col2, m_col3, m_col4 = st.columns(4)
-    with m_col1:
-        st.markdown(f'''
-        <div class="perf-metric-mini">
-            <div class="perf-metric-label">Mevcut Durum</div>
-            <div class="perf-metric-val" style="color: {"#10b981" if selected_target['status'] == "AÇIK" else "#ef4444"};">{selected_target['status']}</div>
-        </div>
-        ''', unsafe_allow_html=True)
-    with m_col2:
-        st.markdown(f'''
-        <div class="perf-metric-mini">
-            <div class="perf-metric-label">Port Durumu</div>
-            <div class="perf-metric-val">Port {selected_target['port']} - {selected_target['tcp']}</div>
-        </div>
-        ''', unsafe_allow_html=True)
-    with m_col3:
-        st.markdown(f'''
-        <div class="perf-metric-mini">
-            <div class="perf-metric-label">Son Yanıt Süresi</div>
-            <div class="perf-metric-val">{selected_target['latency']}</div>
-        </div>
-        ''', unsafe_allow_html=True)
-    with m_col4:
-        # Son paket kaybını loglardan al
-        latest_loss = target_logs[-1].get('paket_kaybi', 0)
-        st.markdown(f'''
-        <div class="perf-metric-mini">
-            <div class="perf-metric-label">Mevcut Paket Kaybı</div>
-            <div class="perf-metric-val" style="color: {"#10b981" if latest_loss == 0 else "#ef4444"};">{latest_loss}%</div>
-        </div>
-        ''', unsafe_allow_html=True)
+        p_col1, p_col2 = st.columns(2)
+        
+        with p_col1:
+            st.markdown(f'''
+            <div class="chart-header">
+                <span class="chart-title">Ping Süresi (Latency)</span>
+                <span class="chart-avg">Ort: {avg_latency:.1f}ms</span>
+            </div>
+            ''', unsafe_allow_html=True)
+            # Latency Chart
+            chart_data_lat = df_perf.set_index('tarih_saat')[['gecikme_ms']]
+            st.line_chart(chart_data_lat, color="#3b82f6")
+            st.markdown('<p style="color: #64748b; font-size: 0.8rem; margin-top: -10px;">Düşük gecikme daha iyidir</p>', unsafe_allow_html=True)
 
-st.markdown('</div>', unsafe_allow_html=True)
+        with p_col2:
+            st.markdown(f'''
+            <div class="chart-header">
+                <span class="chart-title">Paket Kaybı (Packet Loss)</span>
+                <span class="chart-avg" style="color: #ef4444;">Ort: {avg_loss:.1f}%</span>
+            </div>
+            ''', unsafe_allow_html=True)
+            # Loss Chart
+            chart_data_loss = df_perf.set_index('tarih_saat')[['paket_kaybi']]
+            st.area_chart(chart_data_loss, color="#ef4444")
+            st.markdown('<p style="color: #64748b; font-size: 0.8rem; margin-top: -10px;">%0 kaybı ideal durumdur</p>', unsafe_allow_html=True)
+
+        # Mini Metrics below charts
+        m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+        with m_col1:
+            st.markdown(f'''
+            <div class="perf-metric-mini">
+                <div class="perf-metric-label">Mevcut Durum</div>
+                <div class="perf-metric-val" style="color: {"#10b981" if selected_target['status'] == "AÇIK" else "#ef4444"};">{selected_target['status']}</div>
+            </div>
+            ''', unsafe_allow_html=True)
+        with m_col2:
+            st.markdown(f'''
+            <div class="perf-metric-mini">
+                <div class="perf-metric-label">Port Durumu</div>
+                <div class="perf-metric-val">Port {selected_target['port']} - {selected_target['servis_durumu']}</div>
+            </div>
+            ''', unsafe_allow_html=True)
+        with m_col3:
+            st.markdown(f'''
+            <div class="perf-metric-mini">
+                <div class="perf-metric-label">Son Yanıt Süresi</div>
+                <div class="perf-metric-val">{selected_target['latency']}</div>
+            </div>
+            ''', unsafe_allow_html=True)
+        with m_col4:
+            # Son paket kaybını loglardan al
+            latest_loss = target_logs[-1].get('paket_kaybi', 0)
+            st.markdown(f'''
+            <div class="perf-metric-mini">
+                <div class="perf-metric-label">Mevcut Paket Kaybı</div>
+                <div class="perf-metric-val" style="color: {"#10b981" if latest_loss == 0 else "#ef4444"};">{latest_loss}%</div>
+            </div>
+            ''', unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # --- LOGS SECTION ---
 st.markdown("---")

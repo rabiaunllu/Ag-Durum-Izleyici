@@ -30,7 +30,7 @@ def rapor_olustur():
     for cihaz in cihazlar:
         cihaz_kayitlari = [k for k in kayitlar if k["hedef_adi"] == cihaz]
         toplam = len(cihaz_kayitlari)
-        aciklar = [k for k in cihaz_kayitlari if k["durum"] == "ACIK"]
+        aciklar = [k for k in cihaz_kayitlari if k["durum"] == "AÇIK"]
 
         # Gecikme sürelerini topla (None olmayanları)
         gecikmeler = [k["gecikme_ms"] for k in aciklar if k["gecikme_ms"] is not None]

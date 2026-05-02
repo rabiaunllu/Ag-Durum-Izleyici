@@ -83,7 +83,7 @@ def renkli_durum_yazdir(mesaj, durum):
         print(mesaj)
         return
 
-    if durum == "ACIK":
+    if durum == "AÇIK":
         print(Fore.GREEN + mesaj)
     elif durum == "YAVAS":
         print(Fore.YELLOW + mesaj)
@@ -108,7 +108,7 @@ def modulu_test_et():
         gecikme, kayip = ping_gonder(ip, paket_sayisi=2, zaman_asimi=2)
 
         if gecikme is not None:
-            renkli_durum_yazdir(f"  Sonuç -> Gecikme: {gecikme} ms | Paket Kaybı: %{kayip}", "ACIK")
+            renkli_durum_yazdir(f"  Sonuç -> Gecikme: {gecikme} ms | Paket Kaybı: %{kayip}", "AÇIK")
         else:
             renkli_durum_yazdir(f"  Sonuç -> Ulaşılamadı! Paket Kaybı: %{kayip}", "KAPALI")
 
