@@ -82,17 +82,5 @@
     "port": 8000,
     "protokol": "TCP",
     "control_type": "Sadece TCP Port"
-  },
-  {
-    "ip": "193.140.143.195",
-    "port": 443,
-    "name": "Marmara Üniversitesi",
-    "control_type": "Sadece TCP Port"
-  },
-  {
-    "ip": "192.178.24.78",
-    "port": 443,
-    "name": "Classroom",
-    "control_type": "Sadece TCP Port"
   }
 ]

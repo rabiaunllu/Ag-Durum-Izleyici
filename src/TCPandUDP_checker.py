@@ -1,6 +1,7 @@
 import socket
 import time
 import errno
+import http.client
 
 # =============================================================================
 # GENİŞLETİLMİŞ HATA KODU SÖZLÜĞÜ (Socket Error Code Dictionary)
@@ -56,6 +57,37 @@ def _hata_detayi_olustur(hata_kodu):
     }
 
 
+def check_http(ip_address, port, timeout=5):
+    start_time = time.time()
+    try:
+        if port == 443:
+            import ssl
+            context = ssl._create_unverified_context()
+            conn = http.client.HTTPSConnection(ip_address, timeout=timeout, context=context)
+        else:
+            conn = http.client.HTTPConnection(ip_address, port, timeout=timeout)
+            
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        conn.request("GET", "/", headers=headers)
+        response = conn.getresponse()
+        latency_ms = (time.time() - start_time) * 1000
+        
+        if response.status < 500:
+            return True, round(latency_ms, 2), f"HTTP {response.status}", None
+        else:
+            detay = {"hata_kodu": response.status, "kategori": "HTTP Sunucu Hatası", "aciklama": f"Sunucu HTTP {response.status} hatası döndürdü."}
+            return False, None, f"HTTP {response.status} veya Hata", detay
+    except Exception as e:
+        detay = {"hata_kodu": 0, "kategori": "HTTP Bağlantı Hatası", "aciklama": str(e)}
+        return False, None, "HTTP veya Hata", detay
+    finally:
+        try:
+            conn.close()
+        except:
+            pass
+
+
+
 def check_port(ip_address, port, protocol="TCP", timeout=1):
     """
     Verilen IP adresi ve port'a belirtilen protokolle bağlantı dener.
@@ -107,11 +139,11 @@ def check_port(ip_address, port, protocol="TCP", timeout=1):
                 # Hata dönüp dönmediğini dinle (ICMP Destination Unreachable vb.)
                 sock.recvfrom(1024)
                 latency_ms = (time.time() - start_time) * 1000
-                return True, round(latency_ms, 2), "AÇIK", None
+                return True, round(latency_ms, 2), "Durum Belirsiz (UDP doğası gereği kesin yanıt dönmez. Port açık veya güvenlik duvarı tarafından filtrelenmiş olabilir.)", None
             except socket.timeout:
                 # Timeout olması, UDP'de portun açık veya filtrelenmiş olduğunu gösterir.
                 latency_ms = (time.time() - start_time) * 1000
-                return True, round(latency_ms, 2), "AÇIK (Filtrelenmiş)", None
+                return True, round(latency_ms, 2), "Durum Belirsiz (UDP doğası gereği kesin yanıt dönmez. Port açık veya güvenlik duvarı tarafından filtrelenmiş olabilir.)", None
             except ConnectionResetError:
                 # ICMP Port Unreachable hatası
                 detay = _hata_detayi_olustur(10061)
@@ -123,6 +155,9 @@ def check_port(ip_address, port, protocol="TCP", timeout=1):
                 return False, None, f"UDP Hatası: {str(e)}", {"hata_kodu": 0, "kategori": "Beklenmeyen Hata", "aciklama": str(e)}
             finally:
                 sock.close()
+
+        elif protocol.upper() == "HTTP":
+            return check_http(ip_address, port, timeout)
 
     except socket.timeout:
         detay = _hata_detayi_olustur(10060)
