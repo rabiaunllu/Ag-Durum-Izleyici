@@ -9,7 +9,7 @@ from streamlit_autorefresh import st_autorefresh
 
 # src dizinini python yoluna ekle
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
-import logger
+import logger# type: ignore
 
 # Dosya yolları
 TARGETS_FILE = os.path.join(os.path.dirname(__file__), "config", "targets.json")

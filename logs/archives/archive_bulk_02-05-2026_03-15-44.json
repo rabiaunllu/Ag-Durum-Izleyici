@@ -1,0 +1,182 @@
+[
+  {
+    "tarih_saat": "02-05-2026 03:15:44",
+    "hedef_ip": "140.82.121.4",
+    "port": 443,
+    "hedef_adi": "GitHub Web",
+    "durum": "AÇIK",
+    "gecikme_ms": 41.32,
+    "paket_kaybi": 0,
+    "mesaj": "140.82.121.4 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:44",
+    "hedef_ip": "1.1.1.1",
+    "port": 443,
+    "hedef_adi": "Cloudflare Gateway",
+    "durum": "AÇIK",
+    "gecikme_ms": 5.56,
+    "paket_kaybi": 0.0,
+    "mesaj": "1.1.1.1 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:44",
+    "hedef_ip": "192.168.1.1",
+    "port": 80,
+    "hedef_adi": "Yerel Modem/Router",
+    "durum": "AÇIK",
+    "gecikme_ms": 2.29,
+    "paket_kaybi": 0.0,
+    "mesaj": "192.168.1.1 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:34",
+    "hedef_ip": "10.255.255.1",
+    "port": 8080,
+    "hedef_adi": "Hayali Kapalı Sunucu",
+    "durum": "Hata Kodu: 10035",
+    "gecikme_ms": null,
+    "paket_kaybi": 100,
+    "mesaj": "10.255.255.1 sunucusuna ulaşılamıyor! (Bağlantı koptu)"
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:31",
+    "hedef_ip": "127.0.0.1",
+    "port": 8000,
+    "hedef_adi": "Yerel Test Sunucusu",
+    "durum": "Hata Kodu: 10035",
+    "gecikme_ms": null,
+    "paket_kaybi": 100,
+    "mesaj": "127.0.0.1 sunucusuna ulaşılamıyor! (Bağlantı koptu)"
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:31",
+    "hedef_ip": "20.112.52.29",
+    "port": 443,
+    "hedef_adi": "Microsoft Web",
+    "durum": "Hata Kodu: 10035",
+    "gecikme_ms": null,
+    "paket_kaybi": 100,
+    "mesaj": "20.112.52.29 sunucusuna ulaşılamıyor! (Bağlantı koptu)"
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:24",
+    "hedef_ip": "9.9.9.9",
+    "port": 53,
+    "hedef_adi": "Quad9 DNS",
+    "durum": "AÇIK",
+    "gecikme_ms": 58.48,
+    "paket_kaybi": 0.0,
+    "mesaj": "9.9.9.9 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:24",
+    "hedef_ip": "8.8.8.8",
+    "port": 53,
+    "hedef_adi": "Google DNS (Global)",
+    "durum": "AÇIK",
+    "gecikme_ms": 22.96,
+    "paket_kaybi": 0.0,
+    "mesaj": "8.8.8.8 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:23",
+    "hedef_ip": "193.140.1.1",
+    "port": 443,
+    "hedef_adi": "E-Devlet Kapısı",
+    "durum": "AÇIK",
+    "gecikme_ms": 10.51,
+    "paket_kaybi": 0,
+    "mesaj": "193.140.1.1 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:22",
+    "hedef_ip": "74.125.142.108",
+    "port": 587,
+    "hedef_adi": "Google Mail (SMTP)",
+    "durum": "AÇIK",
+    "gecikme_ms": 187.4,
+    "paket_kaybi": 0,
+    "mesaj": "74.125.142.108 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:22",
+    "hedef_ip": "4.2.2.2",
+    "port": 53,
+    "hedef_adi": "Level3 DNS",
+    "durum": "AÇIK",
+    "gecikme_ms": 43.71,
+    "paket_kaybi": 0.0,
+    "mesaj": "4.2.2.2 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:22",
+    "hedef_ip": "192.178.24.78",
+    "port": 443,
+    "hedef_adi": "Classroom",
+    "durum": "AÇIK",
+    "gecikme_ms": 13.93,
+    "paket_kaybi": 0,
+    "mesaj": "192.178.24.78 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:22",
+    "hedef_ip": "193.140.143.195",
+    "port": 443,
+    "hedef_adi": "Marmara Üniversitesi",
+    "durum": "AÇIK",
+    "gecikme_ms": 9.15,
+    "paket_kaybi": 0,
+    "mesaj": "193.140.143.195 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:22",
+    "hedef_ip": "140.82.121.4",
+    "port": 443,
+    "hedef_adi": "GitHub Web",
+    "durum": "AÇIK",
+    "gecikme_ms": 49.41,
+    "paket_kaybi": 0,
+    "mesaj": "140.82.121.4 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:22",
+    "hedef_ip": "1.1.1.1",
+    "port": 443,
+    "hedef_adi": "Cloudflare Gateway",
+    "durum": "AÇIK",
+    "gecikme_ms": 6.18,
+    "paket_kaybi": 0.0,
+    "mesaj": "1.1.1.1 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:22",
+    "hedef_ip": "192.168.1.1",
+    "port": 80,
+    "hedef_adi": "Yerel Modem/Router",
+    "durum": "AÇIK",
+    "gecikme_ms": 2.37,
+    "paket_kaybi": 0.0,
+    "mesaj": "192.168.1.1 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:22",
+    "hedef_ip": "127.0.0.1",
+    "port": 8501,
+    "hedef_adi": "Kendi Bilgisayarım",
+    "durum": "AÇIK",
+    "gecikme_ms": 0.91,
+    "paket_kaybi": 0,
+    "mesaj": "127.0.0.1 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "02-05-2026 03:15:01",
+    "hedef_ip": "10.255.255.1",
+    "port": 8080,
+    "hedef_adi": "Hayali Kapalı Sunucu",
+    "durum": "Hata Kodu: 10035",
+    "gecikme_ms": null,
+    "paket_kaybi": 100,
+    "mesaj": "10.255.255.1 sunucusuna ulaşılamıyor! (Bağlantı koptu)"
+  }
+]

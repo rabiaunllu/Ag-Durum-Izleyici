@@ -6,7 +6,7 @@ import threading
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # logs klasörünü ve json dosyasını proje dizininde tutuyoruz
 LOG_DOSYASI = os.path.abspath(os.path.join(BASE_DIR, "..", "logs", "monitor_log.json"))
-MAKSIMUM_KAYIT = 10000
+MAKSIMUM_KAYIT = 5000
 lock = threading.Lock()
 
 
