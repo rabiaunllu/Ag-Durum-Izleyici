@@ -1,0 +1,11 @@
+{
+  "email": {
+    "aktif": true,
+    "smtp_sunucu": "smtp.gmail.com",
+    "smtp_port": 587,
+    "gonderen_email": "elifnazkidil7@gmail.com",
+    "gonderen_sifre": "dott ldsd wmrs bewm",
+    "alici_email": "elifnazkidil7@gmail.com"
+  },
+  "cooldown_dakika": 20
+}

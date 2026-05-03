@@ -3,19 +3,27 @@ import os
 from datetime import datetime
 import threading
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # logs klasörünü ve json dosyasını proje dizininde tutuyoruz
-LOG_DOSYASI = os.path.abspath(os.path.join(BASE_DIR, "..", "logs", "monitor_log.json"))
-MAKSIMUM_KAYIT = 5000
+LOG_DOSYASI = os.path.abspath(os.path.join(BASE_DIR, "logs", "monitor_log.json"))
+MAKSIMUM_KAYIT = 10000
 lock = threading.Lock()
 
 
 def kayit_ekle(veri):
     tarih_saat = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
+    # Hata detay bilgilerini al (varsa)
+    hata_detayi = veri.get("hata_detayi")       # Kısa kategori: "Zaman Aşımı", "Port Reddedildi" vb.
+    hata_kodu = veri.get("hata_kodu")            # Sayısal kod: 10061, 10060 vb.
+    hata_aciklamasi = veri.get("hata_aciklamasi") # Detaylı Türkçe açıklama
+
     # Arayüzdeki log akışı için dinamik mesaj oluşturma
     if veri["durum"] == "AÇIK":
         mesaj = f"{veri['hedef_ip']} sunucusu erişilebilir."
+    elif hata_detayi:
+        # Hata detayı varsa mesaja dahil et (daha bilgilendirici log)
+        mesaj = f"{veri['hedef_ip']} sunucusuna ulaşılamıyor! Sebep: {hata_detayi}"
     else:
         mesaj = f"{veri['hedef_ip']} sunucusuna ulaşılamıyor! (Bağlantı koptu)"
 
@@ -27,6 +35,9 @@ def kayit_ekle(veri):
         "durum": veri.get("durum"),
         "gecikme_ms": veri.get("gecikme_ms"),
         "paket_kaybi": veri.get("paket_kaybi"),
+        "hata_detayi": hata_detayi,
+        "hata_kodu": hata_kodu,
+        "hata_aciklamasi": hata_aciklamasi,
         "mesaj": mesaj
     }
 
@@ -39,20 +50,20 @@ def kayit_ekle(veri):
 
         # Dosya şişmesin diye sınırı koruyoruz
         if len(mevcut_veriler) >= MAKSIMUM_KAYIT:
-            # En yeni %10'u ana dosyada bırak, geri kalan %90'ı arşivle
-            yeni_sinir = max(1, int(MAKSIMUM_KAYIT * 0.1))
+            # En yeni %70'i ana dosyada bırak (grafikler beslensin), geri kalan en eski %30'u arşivle
+            yeni_sinir = max(1, int(MAKSIMUM_KAYIT * 0.70))
             eski_veriler = mevcut_veriler[yeni_sinir:]
             mevcut_veriler = mevcut_veriler[:yeni_sinir]
-            
+
             # Arşivleme işlemi
             try:
                 arsiv_klasoru = os.path.join(os.path.dirname(LOG_DOSYASI), "archives")
                 os.makedirs(arsiv_klasoru, exist_ok=True)
-                
+
                 zaman_damgasi = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
                 arsiv_dosya_adi = f"archive_bulk_{zaman_damgasi}.json"
                 arsiv_yolu = os.path.join(arsiv_klasoru, arsiv_dosya_adi)
-                
+
                 with open(arsiv_yolu, "w", encoding="utf-8") as f:
                     json.dump(eski_veriler, f, indent=2, ensure_ascii=False)
             except Exception as e:

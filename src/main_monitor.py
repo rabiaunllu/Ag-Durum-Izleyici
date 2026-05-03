@@ -49,6 +49,7 @@ def cihaz_kontrol_et(isim, veri):
         gecikme_ping = None
         port_acik_mi = False
         gecikme_port = None
+        hata_detayi = None
         k = 100
         tcp_mesaj = "KAPALI"
 
@@ -57,7 +58,7 @@ def cihaz_kontrol_et(isim, veri):
             gecikme_ping, k = ping_checker.ping_gonder(ip, paket_sayisi=1)
             
         if "TCP" in control_type or "İkisi de" in control_type:
-            port_acik_mi, gecikme_port, tcp_mesaj = TCPandUDP_checker.check_port(ip, port, protocol=proto)
+            port_acik_mi, gecikme_port, tcp_mesaj, hata_detayi = TCPandUDP_checker.check_port(ip, port, protocol=proto)
 
         # Eğer herhangi biri yanıt verirse cihaz AÇIK'tır
         if (gecikme_ping is not None) or port_acik_mi:
@@ -90,7 +91,10 @@ def cihaz_kontrol_et(isim, veri):
         "hedef_adi": isim,
         "durum": su_anki_durum,
         "gecikme_ms": aktif_gecikme,
-        "paket_kaybi": kayip
+        "paket_kaybi": kayip,
+        "hata_detayi": hata_detayi.get("kategori") if hata_detayi else None,
+        "hata_kodu": hata_detayi.get("hata_kodu") if hata_detayi else None,
+        "hata_aciklamasi": hata_detayi.get("aciklama") if hata_detayi else None
     }
     logger.kayit_ekle(log_paketi) # Bu artık hem JSON hem SQLite'a yazar
 

@@ -10,6 +10,9 @@ from streamlit_autorefresh import st_autorefresh
 # src dizinini python yoluna ekle
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 import logger# type: ignore
+from alerter import AlertManager
+
+alerter = AlertManager()
 
 # Dosya yolları
 TARGETS_FILE = os.path.join(os.path.dirname(__file__), "config", "targets.json")
@@ -32,6 +35,10 @@ if 'is_monitoring' not in st.session_state:
     st.session_state.is_monitoring = True
 if 'previous_status' not in st.session_state:
     st.session_state.previous_status = {}
+if 'okunmamis_bildirim_sayisi' not in st.session_state:
+    st.session_state.okunmamis_bildirim_sayisi = 0
+if 'bildirim_listesi' not in st.session_state:
+    st.session_state.bildirim_listesi = []
 
 # Her döngüde dialog durumunu sıfırla. Dialog açıkken içindeki kod bu değeri True yapacak.
 st.session_state.dialog_active = False
@@ -310,6 +317,25 @@ def settings_dialog():
         time.sleep(1)
         st.rerun()
 
+@st.dialog("📧 Bildirim Merkezi")
+def notification_dialog():
+    st.session_state.dialog_active = True
+    st.session_state.okunmamis_bildirim_sayisi = 0  # Modalı açtığı an sıfırla
+    
+    st.markdown("### 🔔 Son Bildirimler")
+    
+    ui_gecmis = st.session_state.bildirim_listesi
+    
+    if not ui_gecmis:
+        st.info("Henüz yeni bir bildirim bulunmuyor.")
+    else:
+        for b in ui_gecmis:
+            # Sade ve şık kırmızı kutu (st.error)
+            st.error(f"🕒 **{b['zaman']}** | 🖥️ **{b['hedef_adi']}**\n\n⚠️ {b['mesaj']}")
+
+    if st.button("Kapat", use_container_width=True):
+        st.rerun()
+
 @st.dialog("Hedefi Kaldır")
 def confirm_remove_dialog(ip, port, name):
     st.session_state.dialog_active = True
@@ -408,7 +434,12 @@ def get_latest_status():
                 "servis_durumu": "Başarılı" if durum == "AÇIK" else "Başarısız",
                 "latency": f"{log.get('gecikme_ms')}ms" if log.get('gecikme_ms') is not None else "N/A",
                 "last_check": log.get("tarih_saat").split(" ")[1] if log.get("tarih_saat") else "N/A",
-                "status": "AÇIK" if durum == "AÇIK" else "KAPALI"
+                "status": "AÇIK" if durum == "AÇIK" else "KAPALI",
+                "hata_detayi": {
+                    "kategori": log.get("hata_detayi"),
+                    "hata_kodu": log.get("hata_kodu"),
+                    "aciklama": log.get("hata_aciklamasi")
+                } if log.get("hata_detayi") else None
             })
         else:
             results.append({
@@ -420,7 +451,8 @@ def get_latest_status():
                 "servis_durumu": "Bilinmiyor",
                 "latency": "N/A",
                 "last_check": "N/A",
-                "status": "BILINMIYOR"
+                "status": "BILINMIYOR",
+                "hata_detayi": None
             })
     return results
 
@@ -435,6 +467,29 @@ for r in results:
     if key in st.session_state.previous_status:
         if st.session_state.previous_status[key] == "AÇIK" and r['status'] == "KAPALI":
             st.toast(f"⚠️ {r['name']} ({r['ip']}) bağlantısı koptu!", icon="🚨")
+            
+            # --- UI Bildirim Merkezi Mantığı ---
+            st.session_state.okunmamis_bildirim_sayisi += 1
+            zaman = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+            hata = r.get('hata_detayi')
+            hata_mesaji = hata['aciklama'] if hata else "Bağlantı koptu veya zaman aşımına uğradı."
+            
+            st.session_state.bildirim_listesi.insert(0, {
+                "zaman": zaman,
+                "hedef_adi": r['name'],
+                "ip": r['ip'],
+                "mesaj": hata_mesaji,
+                "durum": "KAPALI"
+            })
+
+            alerter.bildirim_gonder(
+                hedef_adi=r['name'],
+                ip=r['ip'],
+                port=r['port'],
+                eski_durum="AÇIK",
+                yeni_durum="KAPALI",
+                hata_detayi=r.get("hata_detayi")
+            )
 st.session_state.previous_status = current_status
 
 # --- HEADER & ACTIONS ---
@@ -448,7 +503,7 @@ with header_col1:
     ''', unsafe_allow_html=True)
 
 with header_col2:
-    act_col1, act_col2, act_col3, act_col4 = st.columns(4)
+    act_col1, act_col2, act_col3, act_col4, act_col5 = st.columns(5)
     with act_col1:
         if st.button("ℹ️ Hata Kodları", use_container_width=True):
             dictionary_dialog()
@@ -456,9 +511,18 @@ with header_col2:
         if st.button("⚙️ Ayarlar", use_container_width=True):
             settings_dialog()
     with act_col3:
+        if st.session_state.okunmamis_bildirim_sayisi > 0:
+            btn_label = f"📧 Bildirimler ({st.session_state.okunmamis_bildirim_sayisi})"
+        else:
+            btn_label = "📧 Bildirimler"
+            
+        if st.button(btn_label, use_container_width=True):
+            st.session_state.okunmamis_bildirim_sayisi = 0
+            notification_dialog()
+    with act_col4:
         if st.button("➕ Hedef Ekle", use_container_width=True):
             add_target_dialog()
-    with act_col4:
+    with act_col5:
         monitor_color = "#10b981" if st.session_state.is_monitoring else "#ef4444"
         monitor_text = "📡 İzleme Aktif" if st.session_state.is_monitoring else "🚫 İzleme Durdu"
         if st.button(monitor_text, use_container_width=True):
@@ -692,14 +756,20 @@ with l_col2:
             confirm_clear_logs_dialog()
 
 if not log_df.empty:
-    display_df = log_df.rename(columns={
+    # 1. Arayüzde kalabalık yapan o 3 teknik sütunu DataFrame'den çıkarıyoruz
+    temiz_df = log_df.drop(columns=["hata_detayi", "hata_kodu", "hata_aciklamasi"], errors='ignore')
+    
+    # 2. Kalan temiz sütunların isimlerini arayüz için Türkçeleştiriyoruz
+    display_df = temiz_df.rename(columns={
         "tarih_saat": "Tarih & Saat",
         "hedef_ip": "IP Adresi",
         "port": "Port",
+        "protokol": "Protokol",
         "hedef_adi": "Hedef Adı",
         "durum": "Durum",
         "gecikme_ms": "Gecikme (ms)",
-        "paket_kaybi": "Paket Kaybı (%)"
+        "paket_kaybi": "Paket Kaybı (%)",
+        "mesaj": "Sistem Mesajı"
     })
     st.dataframe(display_df, use_container_width=True, hide_index=True)
 else:
