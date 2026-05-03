@@ -7,5 +7,8 @@
     "gonderen_sifre": "dott ldsd wmrs bewm",
     "alici_email": "elifnazkidil7@gmail.com"
   },
-  "cooldown_dakika": 20
+  "cooldown_dakika": 20,
+  "log_ayarlari": {
+    "max_kayit": 10000
+  }
 }

@@ -10,7 +10,7 @@ from streamlit_autorefresh import st_autorefresh
 # src dizinini python yoluna ekle
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 import logger# type: ignore
-from alerter import AlertManager
+from alerter import AlertManager # type: ignore
 
 alerter = AlertManager()
 
@@ -302,25 +302,60 @@ def settings_dialog():
         value=st.session_state.settings_interval
     )
     
+    mevcut_max_log = alerter.config.get("log_ayarlari", {}).get("max_kayit", 10000)
+    
     new_max_logs = st.number_input(
-        "Maksimum Log Sayısı",
+        "Maksimum Log Kapasitesi",
         min_value=10,
         max_value=50000,
-        value=st.session_state.settings_max_logs
+        value=mevcut_max_log
     )
     
     if st.button("Kaydet", use_container_width=True):
         st.session_state.settings_interval = new_interval
-        st.session_state.settings_max_logs = new_max_logs
-        logger.maksimum_kayit_ayarla(new_max_logs)
-        st.success("Ayarlar uygulandı!")
-        time.sleep(1)
-        st.rerun()
+        
+        try:
+            # Log ayarlarını config dosyasına kaydet
+            if "log_ayarlari" not in alerter.config:
+                alerter.config["log_ayarlari"] = {}
+            alerter.config["log_ayarlari"]["max_kayit"] = new_max_logs
+            
+            basarili = alerter.config_guncelle(alerter.config)
+            if basarili:
+                st.success("Ayarlar başarıyla kaydedildi!")
+                time.sleep(1)
+                st.rerun()
+            else:
+                st.error("Kayıt Hatası: JSON dosyası güncellenemedi.")
+        except Exception as e:
+            st.error(f"Kayıt Hatası: {e}")
 
 @st.dialog("📧 Bildirim Merkezi")
 def notification_dialog():
     st.session_state.dialog_active = True
     st.session_state.okunmamis_bildirim_sayisi = 0  # Modalı açtığı an sıfırla
+    
+    st.markdown("### 📧 Bildirim Alıcısını Ayarla")
+    mevcut_email = alerter.config.get("email", {}).get("alici_email", "")
+    yeni_email = st.text_input("Alıcı E-posta Adresi", value=mevcut_email)
+    
+    if st.button("🔔 Ayarları Kaydet", use_container_width=True):
+        try:
+            if "email" not in alerter.config:
+                alerter.config["email"] = {}
+            alerter.config["email"]["alici_email"] = yeni_email
+            
+            basarili = alerter.config_guncelle(alerter.config)
+            if basarili:
+                st.success("Bildirim alıcısı başarıyla güncellendi!")
+                time.sleep(1)
+                st.rerun()
+            else:
+                st.error("Kayıt Hatası: JSON dosyası güncellenemedi.")
+        except Exception as e:
+            st.error(f"Kayıt Hatası: {e}")
+            
+    st.markdown("---")
     
     st.markdown("### 🔔 Son Bildirimler")
     
@@ -747,30 +782,33 @@ with l_col2:
     log_data = logger.son_kayitlari_getir(st.session_state.settings_max_logs)
     log_df = pd.DataFrame(log_data)
     
+    # 1. Veri Temizliği ve İsimlendirme (CSV ve UI için ortak)
+    if not log_df.empty:
+        temiz_df = log_df.drop(columns=["hata_detayi", "hata_kodu", "hata_aciklamasi"], errors='ignore')
+        display_df = temiz_df.rename(columns={
+            "tarih_saat": "Tarih & Saat",
+            "hedef_ip": "IP Adresi",
+            "port": "Port",
+            "protokol": "Protokol",
+            "hedef_adi": "Hedef Adı",
+            "durum": "Durum",
+            "gecikme_ms": "Gecikme (ms)",
+            "paket_kaybi": "Paket Kaybı (%)",
+            "mesaj": "Sistem Mesajı"
+        })
+    else:
+        display_df = pd.DataFrame()
+    
     csv_col, clear_col = st.columns(2)
     with csv_col:
-        csv = log_df.to_csv(index=False, sep=';').encode('utf-8-sig') if not log_df.empty else b""
+        # 3. Temizlenmiş veriyi CSV'ye dönüştürme
+        csv = display_df.to_csv(index=False, sep=';').encode('utf-8-sig') if not display_df.empty else b""
         st.download_button("📥 CSV", data=csv, file_name="monitor_logs.csv", mime="text/csv", use_container_width=True)
     with clear_col:
         if st.button("🗑️ Temizle", use_container_width=True, key="clear_logs_btn"):
             confirm_clear_logs_dialog()
 
-if not log_df.empty:
-    # 1. Arayüzde kalabalık yapan o 3 teknik sütunu DataFrame'den çıkarıyoruz
-    temiz_df = log_df.drop(columns=["hata_detayi", "hata_kodu", "hata_aciklamasi"], errors='ignore')
-    
-    # 2. Kalan temiz sütunların isimlerini arayüz için Türkçeleştiriyoruz
-    display_df = temiz_df.rename(columns={
-        "tarih_saat": "Tarih & Saat",
-        "hedef_ip": "IP Adresi",
-        "port": "Port",
-        "protokol": "Protokol",
-        "hedef_adi": "Hedef Adı",
-        "durum": "Durum",
-        "gecikme_ms": "Gecikme (ms)",
-        "paket_kaybi": "Paket Kaybı (%)",
-        "mesaj": "Sistem Mesajı"
-    })
+if not display_df.empty:
     st.dataframe(display_df, use_container_width=True, hide_index=True)
 else:
     st.info("Henüz log kaydı bulunmuyor.")

@@ -1,0 +1,80 @@
+[
+  {
+    "tarih_saat": "03-05-2026 19:27:38",
+    "hedef_ip": "74.125.142.108",
+    "port": 587,
+    "hedef_adi": "Google Mail (SMTP)",
+    "durum": "AÇIK",
+    "gecikme_ms": 316.36,
+    "paket_kaybi": 0,
+    "hata_detayi": null,
+    "hata_kodu": null,
+    "hata_aciklamasi": null,
+    "mesaj": "74.125.142.108 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "03-05-2026 19:27:38",
+    "hedef_ip": "1.1.1.1",
+    "port": 443,
+    "hedef_adi": "Cloudflare Gateway",
+    "durum": "AÇIK",
+    "gecikme_ms": 194.79,
+    "paket_kaybi": 0.0,
+    "hata_detayi": null,
+    "hata_kodu": null,
+    "hata_aciklamasi": null,
+    "mesaj": "1.1.1.1 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "03-05-2026 19:27:38",
+    "hedef_ip": "140.82.121.4",
+    "port": 443,
+    "hedef_adi": "GitHub Web",
+    "durum": "AÇIK",
+    "gecikme_ms": 204.82,
+    "paket_kaybi": 0,
+    "hata_detayi": null,
+    "hata_kodu": null,
+    "hata_aciklamasi": null,
+    "mesaj": "140.82.121.4 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "03-05-2026 19:27:38",
+    "hedef_ip": "192.178.24.78",
+    "port": 443,
+    "hedef_adi": "Classroom",
+    "durum": "AÇIK",
+    "gecikme_ms": 196.59,
+    "paket_kaybi": 0,
+    "hata_detayi": null,
+    "hata_kodu": null,
+    "hata_aciklamasi": null,
+    "mesaj": "192.178.24.78 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "03-05-2026 19:27:38",
+    "hedef_ip": "4.2.2.2",
+    "port": 53,
+    "hedef_adi": "Level3 DNS",
+    "durum": "AÇIK",
+    "gecikme_ms": 195.08,
+    "paket_kaybi": 0.0,
+    "hata_detayi": null,
+    "hata_kodu": null,
+    "hata_aciklamasi": null,
+    "mesaj": "4.2.2.2 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "03-05-2026 19:27:38",
+    "hedef_ip": "193.140.143.195",
+    "port": 443,
+    "hedef_adi": "Marmara Üniversitesi",
+    "durum": "AÇIK",
+    "gecikme_ms": 197.72,
+    "paket_kaybi": 0,
+    "hata_detayi": null,
+    "hata_kodu": null,
+    "hata_aciklamasi": null,
+    "mesaj": "193.140.143.195 sunucusu erişilebilir."
+  }
+]

@@ -61,8 +61,10 @@ class AlertManager:
                 json.dump(yeni_config, f, indent=2, ensure_ascii=False)
             self.config = yeni_config
             print("  [ALERTER] Config güncellendi.")
+            return True
         except Exception as e:
             print(f"  [ALERTER HATA] Config yazılamadı: {e}")
+            return False
 
     def _cooldown_kontrol(self, hedef_adi):
         """

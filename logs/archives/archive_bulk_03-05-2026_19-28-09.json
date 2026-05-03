@@ -1,0 +1,80 @@
+[
+  {
+    "tarih_saat": "03-05-2026 19:27:47",
+    "hedef_ip": "127.0.0.1",
+    "port": 8000,
+    "hedef_adi": "Yerel Test Sunucusu",
+    "durum": "Güvenlik Duvarı Engeli",
+    "gecikme_ms": null,
+    "paket_kaybi": 100,
+    "hata_detayi": "Güvenlik Duvarı Engeli",
+    "hata_kodu": 10035,
+    "hata_aciklamasi": "Bağlantı güvenlik duvarı tarafından engellendi.",
+    "mesaj": "127.0.0.1 sunucusuna ulaşılamıyor! Sebep: Güvenlik Duvarı Engeli"
+  },
+  {
+    "tarih_saat": "03-05-2026 19:27:47",
+    "hedef_ip": "192.168.1.1",
+    "port": 80,
+    "hedef_adi": "Yerel Modem/Router",
+    "durum": "KAPALI (ICMP Timeout)",
+    "gecikme_ms": null,
+    "paket_kaybi": 100,
+    "hata_detayi": null,
+    "hata_kodu": null,
+    "hata_aciklamasi": null,
+    "mesaj": "192.168.1.1 sunucusuna ulaşılamıyor! (Bağlantı koptu)"
+  },
+  {
+    "tarih_saat": "03-05-2026 19:27:47",
+    "hedef_ip": "20.112.52.29",
+    "port": 443,
+    "hedef_adi": "Microsoft Web",
+    "durum": "Güvenlik Duvarı Engeli",
+    "gecikme_ms": null,
+    "paket_kaybi": 100,
+    "hata_detayi": "Güvenlik Duvarı Engeli",
+    "hata_kodu": 10035,
+    "hata_aciklamasi": "Bağlantı güvenlik duvarı tarafından engellendi.",
+    "mesaj": "20.112.52.29 sunucusuna ulaşılamıyor! Sebep: Güvenlik Duvarı Engeli"
+  },
+  {
+    "tarih_saat": "03-05-2026 19:27:40",
+    "hedef_ip": "8.8.8.8",
+    "port": 53,
+    "hedef_adi": "Google DNS (Global)",
+    "durum": "AÇIK",
+    "gecikme_ms": 196.57,
+    "paket_kaybi": 0.0,
+    "hata_detayi": null,
+    "hata_kodu": null,
+    "hata_aciklamasi": null,
+    "mesaj": "8.8.8.8 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "03-05-2026 19:27:40",
+    "hedef_ip": "9.9.9.9",
+    "port": 53,
+    "hedef_adi": "Quad9 DNS",
+    "durum": "AÇIK",
+    "gecikme_ms": 203.89,
+    "paket_kaybi": 0.0,
+    "hata_detayi": null,
+    "hata_kodu": null,
+    "hata_aciklamasi": null,
+    "mesaj": "9.9.9.9 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "03-05-2026 19:27:39",
+    "hedef_ip": "193.140.1.1",
+    "port": 443,
+    "hedef_adi": "E-Devlet Kapısı",
+    "durum": "AÇIK",
+    "gecikme_ms": 103.39,
+    "paket_kaybi": 0,
+    "hata_detayi": null,
+    "hata_kodu": null,
+    "hata_aciklamasi": null,
+    "mesaj": "193.140.1.1 sunucusu erişilebilir."
+  }
+]

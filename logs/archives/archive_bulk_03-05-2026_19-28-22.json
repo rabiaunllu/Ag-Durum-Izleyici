@@ -1,0 +1,80 @@
+[
+  {
+    "tarih_saat": "03-05-2026 19:28:00",
+    "hedef_ip": "192.178.24.78",
+    "port": 443,
+    "hedef_adi": "Classroom",
+    "durum": "AÇIK",
+    "gecikme_ms": 157.09,
+    "paket_kaybi": 0,
+    "hata_detayi": null,
+    "hata_kodu": null,
+    "hata_aciklamasi": null,
+    "mesaj": "192.178.24.78 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "03-05-2026 19:28:00",
+    "hedef_ip": "4.2.2.2",
+    "port": 53,
+    "hedef_adi": "Level3 DNS",
+    "durum": "AÇIK",
+    "gecikme_ms": 146.07,
+    "paket_kaybi": 0.0,
+    "hata_detayi": null,
+    "hata_kodu": null,
+    "hata_aciklamasi": null,
+    "mesaj": "4.2.2.2 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "03-05-2026 19:28:00",
+    "hedef_ip": "140.82.121.4",
+    "port": 443,
+    "hedef_adi": "GitHub Web",
+    "durum": "AÇIK",
+    "gecikme_ms": 151.68,
+    "paket_kaybi": 0,
+    "hata_detayi": null,
+    "hata_kodu": null,
+    "hata_aciklamasi": null,
+    "mesaj": "140.82.121.4 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "03-05-2026 19:28:00",
+    "hedef_ip": "1.1.1.1",
+    "port": 443,
+    "hedef_adi": "Cloudflare Gateway",
+    "durum": "AÇIK",
+    "gecikme_ms": 97.26,
+    "paket_kaybi": 0.0,
+    "hata_detayi": null,
+    "hata_kodu": null,
+    "hata_aciklamasi": null,
+    "mesaj": "1.1.1.1 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "03-05-2026 19:28:00",
+    "hedef_ip": "127.0.0.1",
+    "port": 8501,
+    "hedef_adi": "Kendi Bilgisayarım",
+    "durum": "AÇIK",
+    "gecikme_ms": 13.23,
+    "paket_kaybi": 0,
+    "hata_detayi": null,
+    "hata_kodu": null,
+    "hata_aciklamasi": null,
+    "mesaj": "127.0.0.1 sunucusu erişilebilir."
+  },
+  {
+    "tarih_saat": "03-05-2026 19:27:50",
+    "hedef_ip": "10.255.255.1",
+    "port": 8080,
+    "hedef_adi": "Hayali Kapalı Sunucu",
+    "durum": "Güvenlik Duvarı Engeli",
+    "gecikme_ms": null,
+    "paket_kaybi": 100,
+    "hata_detayi": "Güvenlik Duvarı Engeli",
+    "hata_kodu": 10035,
+    "hata_aciklamasi": "Bağlantı güvenlik duvarı tarafından engellendi.",
+    "mesaj": "10.255.255.1 sunucusuna ulaşılamıyor! Sebep: Güvenlik Duvarı Engeli"
+  }
+]

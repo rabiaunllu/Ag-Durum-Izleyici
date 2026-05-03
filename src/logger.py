@@ -6,8 +6,18 @@ import threading
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # logs klasörünü ve json dosyasını proje dizininde tutuyoruz
 LOG_DOSYASI = os.path.abspath(os.path.join(BASE_DIR, "logs", "monitor_log.json"))
-MAKSIMUM_KAYIT = 10000
 lock = threading.Lock()
+
+def get_maksimum_kayit():
+    config_yolu = os.path.join(BASE_DIR, "config", "alert_config.json")
+    try:
+        if os.path.exists(config_yolu):
+            with open(config_yolu, "r", encoding="utf-8") as f:
+                config = json.load(f)
+                return config.get("log_ayarlari", {}).get("max_kayit", 10000)
+    except Exception:
+        pass
+    return 10000
 
 
 def kayit_ekle(veri):
@@ -49,9 +59,10 @@ def kayit_ekle(veri):
         mevcut_veriler.insert(0, yeni_kayit)
 
         # Dosya şişmesin diye sınırı koruyoruz
-        if len(mevcut_veriler) >= MAKSIMUM_KAYIT:
+        maksimum_kayit = get_maksimum_kayit()
+        if len(mevcut_veriler) >= maksimum_kayit:
             # En yeni %70'i ana dosyada bırak (grafikler beslensin), geri kalan en eski %30'u arşivle
-            yeni_sinir = max(1, int(MAKSIMUM_KAYIT * 0.70))
+            yeni_sinir = max(1, int(maksimum_kayit * 0.70))
             eski_veriler = mevcut_veriler[yeni_sinir:]
             mevcut_veriler = mevcut_veriler[:yeni_sinir]
 
@@ -97,9 +108,3 @@ def son_kayitlari_getir(getirilecek_sayi=50):
     with lock:
         mevcut_veriler = _dosyayi_oku()
     return mevcut_veriler[:getirilecek_sayi]
-
-
-def maksimum_kayit_ayarla(sayi):
-    """Maksimum kayıt sayısını günceller."""
-    global MAKSIMUM_KAYIT
-    MAKSIMUM_KAYIT = sayi
