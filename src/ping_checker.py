@@ -1,5 +1,4 @@
 #hedefe ping atıp gecikmeyi ve paket kaybını hesaplar.
-
 import time
 # ping3 kütüphanesini içeri al
 try:
@@ -7,7 +6,6 @@ try:
     PING3_VAR_MI = True
 except ImportError:
     PING3_VAR_MI = False
-
 # Renkli konsol çıktıları için colorama
 try:
     from colorama import Fore, Style, init

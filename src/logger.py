@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime
 import threading
+import time
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # logs klasörünü ve json dosyasını proje dizininde tutuyoruz
@@ -86,11 +87,18 @@ def kayit_ekle(veri):
 def _dosyayi_oku():
     if not os.path.exists(LOG_DOSYASI):
         return []
-    try:
-        with open(LOG_DOSYASI, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except:
-        return []
+    
+    # Dosya o an yazılıyorsa (meşgulse) pes etme, 5 kez milisaniyelik aralarla dene
+    for _ in range(5):
+        try:
+            with open(LOG_DOSYASI, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError):
+            # Dosya kilitliyse veya yarım yazılmışsa 0.1 saniye bekle
+            time.sleep(0.1)
+            continue
+            
+    return []
 
 
 def _dosyaya_yaz(veri):

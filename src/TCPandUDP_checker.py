@@ -3,15 +3,8 @@ import time
 import errno
 import http.client
 
-# =============================================================================
-# GENİŞLETİLMİŞ HATA KODU SÖZLÜĞÜ (Socket Error Code Dictionary)
-# =============================================================================
-# İşletim sistemi seviyesindeki soket hata kodlarını Türkçe teşhis mesajlarına çevirir.
-# Windows (WSA*) ve Linux (errno) kodları birleştirilmiştir.
-#
+
 # Her bir anahtar bir hata kodu, değeri ise (kategori, açıklama) çiftidir.
-# Kategori kısa bir etiket, açıklama ise sistem yöneticisine yönelik detaylı bilgidir.
-# =============================================================================
 HATA_KODLARI = {
     0:     ("Başarılı", "Bağlantı sağlandı."),
     10035: ("Güvenlik Duvarı Engeli", "Bağlantı güvenlik duvarı tarafından engellendi."),
@@ -40,9 +33,6 @@ def _hata_detayi_olustur(hata_kodu):
     """
     Hata kodunu yapılandırılmış bir sözlüğe çevirir.
     Bilinmeyen kodlar için genel bir mesaj üretir.
-
-    Returns:
-        dict: {"hata_kodu": int, "kategori": str, "aciklama": str}
     """
     if hata_kodu in HATA_KODLARI:
         kategori, aciklama = HATA_KODLARI[hata_kodu]
@@ -58,94 +48,78 @@ def _hata_detayi_olustur(hata_kodu):
 
 
 def check_http(ip_address, port, timeout=5):
-    start_time = time.time()
+    start_time = time.time() #zaman baslatma
     try:
-        if port == 443:
+        if port == 443: #https ise SSL sertifikasını doğrulamadan geçiyor
             import ssl
             context = ssl._create_unverified_context()
             conn = http.client.HTTPSConnection(ip_address, timeout=timeout, context=context)
-        else:
+        else: #port 80 ise
             conn = http.client.HTTPConnection(ip_address, port, timeout=timeout)
-            
+        #güvenlik duvarlarının bizi bot sanıp engellememesi için maske 
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
         conn.request("GET", "/", headers=headers)
-        response = conn.getresponse()
+        response = conn.getresponse() #sunucudan geelen cevabı tut
         latency_ms = (time.time() - start_time) * 1000
         
-        if response.status < 500:
+        if response.status < 500: #gelen cevap yani sayfadaki kod no bakar
             return True, round(latency_ms, 2), f"HTTP {response.status}", None
         else:
             detay = {"hata_kodu": response.status, "kategori": "HTTP Sunucu Hatası", "aciklama": f"Sunucu HTTP {response.status} hatası döndürdü."}
             return False, None, f"HTTP {response.status} veya Hata", detay
+        
     except Exception as e:
         detay = {"hata_kodu": 0, "kategori": "HTTP Bağlantı Hatası", "aciklama": str(e)}
         return False, None, "HTTP veya Hata", detay
     finally:
         try:
-            conn.close()
+            conn.close() #kapatmazsak ram dolup sistem çöker unutma
         except:
             pass
 
 
 
-def check_port(ip_address, port, protocol="TCP", timeout=1):
-    """
-    Verilen IP adresi ve port'a belirtilen protokolle bağlantı dener.
+def check_port(ip_address, port, protocol="TCP", timeout=1): #timeout 21 sn den büyük olsaydı 10060 gibi hatları alırdık
 
-    Args:
-        ip_address (str): Hedef IP adresi veya hostname
-        port (int): Hedef port numarası
-        protocol (str): "TCP" veya "UDP" (varsayılan="TCP")
-        timeout (int): Bağlantı zaman aşımı süresi (saniye)
-
-    Returns:
-        tuple: (port_acik_mi, gecikme_ms, durum_mesaji, hata_detayi)
-            - port_acik_mi (bool): Port açık mı?
-            - gecikme_ms (float|None): Yanıt süresi (ms) veya None
-            - durum_mesaji (str): İnsan okunabilir durum mesajı
-            - hata_detayi (dict|None): Yapılandırılmış hata bilgisi veya None
-    """
     start_time = time.time()
-
+#TCP SENERYOSU
     try:
         if protocol.upper() == "TCP":
             # AF_INET = IPv4 ailesi, SOCK_STREAM = TCP protokolü
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(timeout)
-            result = sock.connect_ex((ip_address, port))
-            sock.close()
-
-            # Hata Teşhis Algoritması (Socket Level Diagnostics)
-            # Amaç: Sistemin sadece 'çalışıp çalışmadığını' değil, 'neden çalışmadığını'
-            # işletim sistemi seviyesinde teşhis etmek.
-            if result == 0:
+            result = sock.connect_ex((ip_address, port)) #connect de bağlanamazsa exception fırlatır program patlar.
+            sock.close()# İşimiz bitince suncu iel bağlantıyı kapattık (RAM dolmasın diye)
+            #connect_ex kullandık ki bağlanamadığında hata kodu dönsün
+            # Sadece açık mı? demiyoruz, neden kapalı diye işletim sistemine soruyoruz.
+            if result == 0:#hata yoksa
                 latency_ms = (time.time() - start_time) * 1000
                 return True, round(latency_ms, 2), "AÇIK", None
             else:
                 detay = _hata_detayi_olustur(result)
                 return False, None, f"{detay['kategori']}", detay
-
+            
+         #UDP SENARYOSU
         elif protocol.upper() == "UDP":
             # SOCK_DGRAM = UDP protokolü
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
 
-            # UDP Probing ve Zaman Aşımı Yönetimi
-            # Amaç: UDP'nin bağlantısız (unreliable) doğasını, zaman aşımı yönetimiyle daha güvenilir
-            # bir 'yoklama' (probing) mekanizmasına dönüştürmek. Paketi gönderdikten sonra ICMP hatası bekleriz.
+            # Amaç: UDP'nin bağlantısız doğasını, zaman aşımı yönetimiyle daha güvenilir
+            # bir yoklama mekanizmasına dönüştürmek. Paketi gönderdikten sonra ICMP hatası bekleriz.
             sock.settimeout(2.0)
-            try:
-                # Sadece boş bir paket gönder ('gönder ve unut' yerine)
+            try:#TCP'deki gibi connect yapamayız çünkü UDP bağlantısızdır bu yzden bos veri gönderiyoruz
                 sock.sendto(b'\x00', (ip_address, port))
-                # Hata dönüp dönmediğini dinle (ICMP Destination Unreachable vb.)
-                sock.recvfrom(1024)
+                # Hata dönüp dönmediğini dinle 
+                sock.recvfrom(1024)#sento ile fraltılan paketi takip et dinle ıcmp hatası buradan
                 latency_ms = (time.time() - start_time) * 1000
                 return True, round(latency_ms, 2), "Durum Belirsiz (UDP doğası gereği kesin yanıt dönmez. Port açık veya güvenlik duvarı tarafından filtrelenmiş olabilir.)", None
             except socket.timeout:
-                # Timeout olması, UDP'de portun açık veya filtrelenmiş olduğunu gösterir.
+                # 2 saniye bekledik ses gelmedi. UDP'de sessizlik genelde 'Port açık ama 
+                # sana cevap vermiyo veya Firewalla takıldı demektir.
                 latency_ms = (time.time() - start_time) * 1000
                 return True, round(latency_ms, 2), "Durum Belirsiz (UDP doğası gereği kesin yanıt dönmez. Port açık veya güvenlik duvarı tarafından filtrelenmiş olabilir.)", None
             except ConnectionResetError:
-                # ICMP Port Unreachable hatası
+                # ICMP Port ulaşılamadı hatası
                 detay = _hata_detayi_olustur(10061)
                 return False, None, "Servis Kapalı (Port Reddedildi)", detay
             except OSError as e:
@@ -155,15 +129,16 @@ def check_port(ip_address, port, protocol="TCP", timeout=1):
                 return False, None, f"UDP Hatası: {str(e)}", {"hata_kodu": 0, "kategori": "Beklenmeyen Hata", "aciklama": str(e)}
             finally:
                 sock.close()
-
+         #Eğer port 80 veya 443 ise otomatik bu fonksiyon çalışsın dedik
         elif protocol.upper() == "HTTP":
             return check_http(ip_address, port, timeout)
-
+    
+    #GENEL HATA YAKALAYICILAR
     except socket.timeout:
         detay = _hata_detayi_olustur(10060)
         return False, None, "Zaman Aşımı", detay
     except socket.gaierror as e:
-        # DNS çözümleme hatası (getaddrinfo failed)
+        # DNS çözümleme hatası -ıp yerine site ismi girilirse sistem çökmez 
         detay = {"hata_kodu": -1, "kategori": "DNS Hatası", "aciklama": f"Hostname çözümlenemedi: {ip_address}. DNS sunucusu erişilemez veya hostname geçersiz."}
         return False, None, "DNS Çözümleme Hatası", detay
     except OSError as e:

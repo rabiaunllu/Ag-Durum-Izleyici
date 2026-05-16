@@ -3,7 +3,7 @@
     "name": "Google DNS (Global)",
     "ip": "8.8.8.8",
     "port": 53,
-    "control_type": "ICMP + TCP (İkisi de)",
+    "control_type": "ICMP + UDP (İkisi de)",
     "protokol": "UDP"
   },
   {
@@ -21,13 +21,6 @@
     "protokol": "TCP"
   },
   {
-    "name": "E-Devlet Kapısı",
-    "ip": "193.140.1.1",
-    "port": 443,
-    "control_type": "ICMP + TCP (İkisi de)",
-    "protokol": "TCP"
-  },
-  {
     "name": "Google Mail (SMTP)",
     "ip": "74.125.142.108",
     "port": 587,
@@ -38,15 +31,15 @@
     "name": "Quad9 DNS",
     "ip": "9.9.9.9",
     "port": 53,
-    "control_type": "ICMP + TCP (İkisi de)",
+    "control_type": "ICMP + UDP (İkisi de)",
     "protokol": "UDP"
   },
   {
     "name": "Yerel Modem/Router",
     "ip": "192.168.1.1",
-    "port": 80,
+    "port": 0,
     "control_type": "Sadece ICMP Ping",
-    "protokol": "TCP"
+    "protokol": "ICMP"
   },
   {
     "name": "Kendi Bilgisayarım",
@@ -65,9 +58,9 @@
   {
     "name": "Level3 DNS",
     "ip": "4.2.2.2",
-    "port": 53,
+    "port": 0,
     "control_type": "Sadece ICMP Ping",
-    "protokol": "UDP"
+    "protokol": "ICMP"
   },
   {
     "name": "Microsoft Web",
@@ -81,6 +74,12 @@
     "ip": "127.0.0.1",
     "port": 8000,
     "protokol": "TCP",
+    "control_type": "Sadece TCP Port"
+  },
+  {
+    "ip": "216.58.204.110",
+    "port": 443,
+    "name": "classroom",
     "control_type": "Sadece TCP Port"
   }
 ]

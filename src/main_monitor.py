@@ -1,13 +1,9 @@
 import time
 import threading
 from datetime import datetime
-
-# Proje klasöründeki diğer modüllerimizi içeri aktarıyoruz
-# G1'den TCP, G2'den Ping ve loglama modülleri sisteme dahil ediliyor.
 import logger
 import ping_checker
 import TCPandUDP_checker
-
 import os
 import json
 
@@ -27,24 +23,24 @@ def load_targets_dynamic():
             return {}
     return {}
 
-# --- DURUM TAKİBİ (STATE MANAGEMENT) ---
+# DURUM TAKİBİ
 son_durumlar = {}
 
-# e-Bu sayede bir cihazın ping süresini beklerken diğeri de kendi işlemini yapabilecek.
+# temiz ve okunabilir bir yapı
 def cihaz_kontrol_et(isim, veri):
     global son_durumlar
     ip = veri["ip"]
     port = veri["port"]
     proto = veri.get("protokol", "TCP") # Eğer belirtilmemişse varsayılan TCP
 
-    # --- YENİLENEN KONTROL MEKANİZMASI (RETRY LOGIC) ---
+    #elde veri olması için basta kapalı sonradna güncelleniyor
     su_anki_durum = "KAPALI"
     aktif_gecikme = None
     kayip = 100
     
     control_type = veri.get("control_type", "ICMP + TCP (İkisi de)")
 
-    # Cihazı 3 kez kontrol ediyoruz
+    # Cihazı 3 kez kontrol ediyoruz- Ağdaki anlık bir takılma yüzünden hemen "Cihaz çöktü" alarmı vermesin diye
     for deneme in range(3):
         gecikme_ping = None
         port_acik_mi = False
@@ -57,8 +53,8 @@ def cihaz_kontrol_et(isim, veri):
         if "ICMP" in control_type or "İkisi de" in control_type:
             gecikme_ping, k = ping_checker.ping_gonder(ip, paket_sayisi=1)
             
-        if "TCP" in control_type or "İkisi de" in control_type:
-            port_acik_mi, gecikme_port, tcp_mesaj, hata_detayi = TCPandUDP_checker.check_port(ip, port, protocol=proto)
+        if "TCP" in control_type or "UDP" in control_type or "İkisi de" in control_type:
+            port_acik_mi, gecikme_port, port_mesaj, hata_detayi = TCPandUDP_checker.check_port(ip, port, protocol=proto)
 
         # Eğer herhangi biri yanıt verirse cihaz AÇIK'tır
         if (gecikme_ping is not None) or port_acik_mi:
@@ -68,22 +64,22 @@ def cihaz_kontrol_et(isim, veri):
             break
         else:
             # Başarısızsa, socket seviyesi teşhis mesajını durum olarak kaydet
-            if "TCP" in control_type or "İkisi de" in control_type:
-                su_anki_durum = tcp_mesaj
+            if "TCP" in control_type or "UDP" in control_type or "İkisi de" in control_type:
+                su_anki_durum = port_mesaj
             else:
                 su_anki_durum = "KAPALI (ICMP Timeout)"
 
-        # Eğer yanıt alamadıysak ve 3. deneme değilse üstel geri çekilme (exponential backoff) ile bekle
+        # Eğer yanıt alamadıysak ve 3. deneme değilse üstel geri çekilme ile bekle
         if deneme < 2:
-            # Üstel Geri Çekilme Algoritması (Exponential Backoff)
-            # Amaç: Ağdaki yoğunluğu (congestion) önlemek ve hedef sunucuyu gereksiz paket yağmuruna 
+            # Üstel Geri Çekilme Algoritması 
+            # Amaç: Ağdaki yoğunluğu yani tıkanıklıgı önlemek ve hedef sunucuyu gereksiz paket yağmuruna 
             # tutmamak için bekleme süresini katlayarak artırmak (2^1 = 2sn, 2^2 = 4sn).
             bekleme_suresi = 2 ** (deneme + 1)
             time.sleep(bekleme_suresi)
-    # --------------------------------------------------
-
-    # 3. ADIM: DURUM DEĞİŞİKLİĞİ VE LOGLAMA
-    # Arayüzün (Streamlit) taze veri alabilmesi için her kontrolde log paketini hazırlayıp kaydediyoruz
+   
+    # Tüm bulguları (IP, hız, hata kodu vb.) bir paket haline getirip logger.py modülüne teslim ediyor
+    # Arayüzün güncel veri alabilmesi için her kontrolde log paketini hazırlayıp kaydediyoruz
+    #arayüz grafiklerini çizebilsin 
     log_paketi = {
         "hedef_ip": ip,
         "port": port,
@@ -138,18 +134,15 @@ try:
         time.sleep(10)
 
 except KeyboardInterrupt:
-    # Program Ctrl+C ile kapatıldığında düzgün bir şekilde çıkış yapması için
     print("\n[!] İzleme sistemi kullanıcı tarafından durduruldu.")
 
-# yaptigim degisiklikler:
+
 """"
 1. Çalışma Mimarisi (Senkron vs. Asenkron)
-İlk Kod (Sıralı/Senkron): Cihazları bir kuyruğa girmiş gibi tek tek kontrol ediyordu. Örneğin, Google DNS'in yanıt vermesini beklerken Marmara Üniversitesi'nin kontrolü başlayamıyordu. Bir cihaz takılırsa tüm sistem duraksıyordu.
-Son Kod (Paralel/Eşzamanlı): threading kütüphanesi sayesinde tüm cihazlar aynı anda "yola çıkar". Her cihaz kendi iş parçacığında (thread) bağımsız kontrol edildiği için birinin yavaşlığı diğerini etkilemez.
+(Sıralı/Senkron): Cihazları bir kuyruğa girmiş gibi tek tek kontrol ediyordu. Örneğin, Google DNS'in yanıt vermesini beklerken Marmara Üniversitesi'nin kontrolü başlayamıyordu. Bir cihaz takılırsa tüm sistem duraksıyordu.
+(Paralel/Eşzamanlı): threading kütüphanesi sayesinde tüm cihazlar aynı anda "yola çıkar". Her cihaz kendi iş parçacığında (thread) bağımsız kontrol edildiği için birinin yavaşlığı diğerini etkilemez.
 2. Zaman Verimliliği 
-İlk Kod: Toplam işlem süresi, listedeki tüm cihazların kontrol sürelerinin toplamına eşitti. 10 cihazın her biri 2 saniye sürse, bir döngü 20 saniye sürüyordu.
-Son Kod: Toplam işlem süresi, listedeki en yavaş tek bir cihazın süresine eşittir. 10 cihaz olsa bile işlem yaklaşık 2 saniyede biter. 
+Toplam işlem süresi, listedeki en yavaş tek bir cihazın süresine eşittir. 10 cihaz olsa bile işlem yaklaşık 2 saniyede biter. 
 3. Kod Organizasyonu ve Modülerlik
-#İlk Kod: Tüm mantık (veri çekme, karar verme, loglama) devasa bir while döngüsünün içine hapsedilmişti. Bu, kodun okunmasını ve hata ayıklanmasını (debugging) zorlaştırıyordu.
-#Son Kod: İzleme mantığını cihaz_kontrol_et adında bağımsız bir fonksiyona taşıdık. Bu modüler yapı sayesinde ileride sadece bu fonksiyonu değiştirerek yeni özellikler eklemek çok daha kolaylaştı.
+ İzleme mantığını cihaz_kontrol_et adında bağımsız bir fonksiyona taşıdık. Bu modüler yapı sayesinde ileride sadece bu fonksiyonu değiştirerek yeni özellikler eklemek kolaylaştı.
 """

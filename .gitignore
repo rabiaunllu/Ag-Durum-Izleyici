@@ -9,3 +9,5 @@ env/
 Thumbs.db
 logs/monitor_log.json
 *.log
+zhatalar
+config/alert_config.json

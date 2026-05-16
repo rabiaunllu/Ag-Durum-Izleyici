@@ -254,7 +254,7 @@ def dictionary_dialog():
 | **0** | Bağlantı Başarılı | Port açık, servis çalışıyor. |
 | **10061** | Port Reddedildi | Sunucu açık ama o portta servis yok. |
 | **10060** | Zaman Aşımı | Pakete cevap gelmedi, paket yolda kayboldu. |
-| **10035** | Güvenlik Duvarı | Firewall paketi sessizce düşürdü (Stealth Drop). |
+| **10035** | Güvenlik Duvarı | Bağlantı güvenlik duvarı tarafından engellendi. |
 | **10065** | Hedefe Ulaşılamıyor | Ağ rotası yok, cihaz tamamen erişilemez. |
 | **10064** | Host Çöktü | Cihaz bağlantı sırasında kapandı. |
 """)
@@ -269,20 +269,36 @@ def add_target_dialog():
         st.write("İzlemek istediğiniz yeni cihaz bilgilerini girin.")
         new_name = st.text_input("Hedef Adı", placeholder="örn: Web Server")
         new_ip = st.text_input("IP Adresi", placeholder="örn: 192.168.1.100")
-        new_port = st.number_input("Port Numarası", min_value=1, max_value=65535, value=80)
-        
         control_type = st.selectbox("Kontrol Tipi", 
-                                    options=["ICMP + TCP (İkisi de)", "Sadece ICMP Ping", "Sadece TCP Port"])
+                                    options=[
+                                        "ICMP + TCP (İkisi de)", 
+                                        "Sadece ICMP Ping", 
+                                        "Sadece TCP Port",
+                                        "ICMP + UDP (İkisi de)",
+                                        "Sadece UDP Port"
+                                    ])
+        
+        sadece_ping_mi = (control_type == "Sadece ICMP Ping")
+        new_port = st.number_input("Port Numarası", min_value=0, max_value=65535, value=80, disabled=sadece_ping_mi)
         
         submitted = st.form_submit_button("➕ Listeye Ekle", use_container_width=True)
         if submitted:
             if new_name and new_ip:
+                # Protokol belirleme
+                if "UDP" in control_type:
+                    secilen_protokol = "UDP"
+                elif "TCP" in control_type:
+                    secilen_protokol = "TCP"
+                else:
+                    secilen_protokol = "ICMP" 
+
                 targets = load_targets()
                 targets.append({
                     "ip": new_ip, 
-                    "port": int(new_port), 
+                    "port": 0 if sadece_ping_mi else int(new_port), 
                     "name": new_name,
-                    "control_type": control_type
+                    "control_type": control_type,
+                    "protokol": secilen_protokol
                 })
                 save_targets(targets)
                 st.success(f"{new_name} eklendi!")
@@ -290,7 +306,6 @@ def add_target_dialog():
                 st.rerun()
             else:
                 st.error("Lütfen tüm alanları doldurun.")
-
 @st.dialog("Sistem Ayarları")
 def settings_dialog():
     st.session_state.dialog_active = True
